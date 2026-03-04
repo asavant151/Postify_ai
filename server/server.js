@@ -17,7 +17,8 @@ app.use(cors({
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:5001",
-    "https://postify-ai-server.vercel.app"
+    "https://postify-ai-server.vercel.app",
+    "https://postify-ai-six.vercel.app"
   ],
   credentials: true,
 }));
