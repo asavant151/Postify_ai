@@ -1,0 +1,187 @@
+import { useState, useRef, useEffect } from "react";
+import { Copy, Download, RefreshCw, Trash2, Linkedin, Twitter, MessageCircle, Check, Share2, AlignLeft, Languages } from "lucide-react";
+import { toast } from "react-hot-toast";
+import API from "../services/api";
+
+const PostCard = ({ post, onDelete, onRegenerate, isHistory = false }) => {
+    const [content, setContent] = useState(post?.generatedContent || "");
+    const [copied, setCopied] = useState(false);
+    const [isTranslating, setIsTranslating] = useState(false);
+    const textareaRef = useRef(null);
+    // API will be imported properly below
+
+    // Auto-resize textarea logic
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+            textareaRef.current.style.height = `${Math.max(250, textareaRef.current.scrollHeight)}px`;
+        }
+    }, [content]);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(content);
+        setCopied(true);
+        toast.success("Copied to clipboard!", { style: { background: '#1e293b', color: '#fff', border: '1px solid #334155' } });
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleDownload = () => {
+        const element = document.createElement("a");
+        const file = new Blob([content], { type: "text/plain" });
+        element.href = URL.createObjectURL(file);
+        element.download = `PostifyAI_${post?.platform || 'Post'}.txt`;
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    };
+
+    const encodedContent = encodeURIComponent(content);
+    const shareLinks = {
+        linkedin: `https://www.linkedin.com/feed/?shareActive=true&text=${encodedContent}`,
+        twitter: `https://twitter.com/intent/tweet?text=${encodedContent}`,
+        whatsapp: `https://api.whatsapp.com/send?text=${encodedContent}`,
+    };
+
+    const handleTranslate = async (language) => {
+        if (!content.trim()) return;
+        setIsTranslating(true);
+        const toastId = toast.loading(`Translating to ${language}...`, { style: { background: '#1e293b', color: '#fff', border: '1px solid #334155' } });
+        try {
+            const { data } = await API.post("/posts/translate", { text: content, targetLanguage: language });
+            setContent(data.translatedContent);
+            toast.success(`Translated to ${language}!`, { id: toastId, style: { background: '#1e293b', color: '#fff', border: '1px solid #334155' } });
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Translation failed", { id: toastId, style: { background: '#1e293b', color: '#fff', border: '1px solid #334155' } });
+        } finally {
+            setIsTranslating(false);
+        }
+    };
+
+    return (
+        <div className="glass-card rounded-[2rem] border border-slate-700 hover:border-slate-500/80 transition-all duration-300 flex flex-col mt-6 shadow-2xl overflow-hidden group relative p-[1px] bg-gradient-to-b from-slate-700/50 to-slate-800/20">
+
+            {/* Real inner wrapper */}
+            <div className="bg-slate-900 rounded-[31px] p-6 md:p-8 h-full flex flex-col">
+
+                {/* Header Badges */}
+                <div className="flex justify-between items-center mb-6 pb-6 border-b border-slate-800/80">
+                    <div className="flex flex-wrap gap-3">
+                        <span className="px-4 py-1.5 bg-gradient-to-r from-blue-500/10 to-blue-600/10 border border-blue-500/30 text-blue-400 rounded-full text-xs font-bold tracking-wide flex items-center gap-1.5 shadow-[0_0_10px_rgba(59,130,246,0.1)]">
+                            {post?.platform === 'LinkedIn' && <Linkedin className="w-3 h-3" />}
+                            {post?.platform === 'Twitter' && <Twitter className="w-3 h-3" />}
+                            {post?.platform || "Platform"}
+                        </span>
+                        <span className="px-4 py-1.5 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-500/30 text-purple-400 rounded-full text-xs font-bold tracking-wide shadow-[0_0_10px_rgba(168,85,247,0.1)]">
+                            {post?.tone || "Tone"}
+                        </span>
+                    </div>
+
+                    {isHistory && (
+                        <button
+                            onClick={() => onDelete(post._id)}
+                            className="text-slate-500 hover:text-red-400 p-2 rounded-full hover:bg-red-400/10 transition-all bg-slate-800/50 border border-slate-700"
+                            title="Delete Post"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
+                    )}
+                </div>
+
+                {/* Prompt Context */}
+                <div className="mb-6 relative">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-purple-500 to-blue-500 rounded-full"></div>
+                    <div className="pl-4">
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Your Prompt</span>
+                        <p className="text-sm text-slate-300 font-medium italic leading-relaxed">"{post?.idea}"</p>
+                    </div>
+                </div>
+
+                {/* Editable Output */}
+                <div className="relative group/editor flex-grow mb-6">
+                    <div className="absolute top-3 left-3 pointer-events-none opacity-30 text-slate-500">
+                        <AlignLeft className="w-5 h-5" />
+                    </div>
+                    <textarea
+                        ref={textareaRef}
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        className="w-full h-full min-h-[250px] bg-slate-950/50 border border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all resize-none text-slate-200 p-5 pl-11 leading-relaxed text-[15px] font-medium shadow-inner"
+                        spellCheck="false"
+                    />
+                </div>
+
+                {/* Action Footer */}
+                <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-6 border-t border-slate-800/80">
+
+                    <div className="flex w-full md:w-auto gap-3">
+                        <button
+                            onClick={handleCopy}
+                            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all border ${copied
+                                ? "bg-green-500/10 text-green-400 border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.15)]"
+                                : "bg-slate-800 text-slate-300 hover:text-white border-slate-700 hover:bg-slate-700 hover:border-slate-600"
+                                }`}
+                        >
+                            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            {copied ? "Copied!" : "Copy Text"}
+                        </button>
+                        <button
+                            onClick={handleDownload}
+                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-800 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 hover:bg-slate-700 rounded-xl text-sm font-bold transition-all"
+                        >
+                            <Download className="w-4 h-4" /> Save .txt
+                        </button>
+                    </div>
+
+                    <div className="flex w-full md:w-auto items-center gap-1 bg-slate-900 border border-slate-700/80 p-1.5 rounded-xl shadow-inner">
+                        <div className="flex items-center gap-1 px-2 text-slate-400">
+                            <Languages className="w-4 h-4" />
+                            <span className="text-xs font-semibold uppercase tracking-wider hidden lg:block">Translate</span>
+                        </div>
+                        <button
+                            onClick={() => handleTranslate("Hindi")}
+                            disabled={isTranslating}
+                            className="px-3 py-1.5 text-xs font-bold bg-slate-800 hover:bg-purple-500/20 hover:text-purple-400 text-slate-300 rounded-lg transition-all border border-slate-700 hover:border-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Translate to Hindi"
+                        >
+                            Hindi
+                        </button>
+                        <button
+                            onClick={() => handleTranslate("Gujarati")}
+                            disabled={isTranslating}
+                            className="px-3 py-1.5 text-xs font-bold bg-slate-800 hover:bg-blue-500/20 hover:text-blue-400 text-slate-300 rounded-lg transition-all border border-slate-700 hover:border-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Translate to Gujarati"
+                        >
+                            Gujarati
+                        </button>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+                        <div className="flex gap-1 items-center px-2 border-r border-slate-800 mr-1">
+                            <Share2 className="w-4 h-4 text-slate-500 mr-2" />
+                            <a href={shareLinks.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg transition-all" title="Share on LinkedIn">
+                                <Linkedin className="w-4 h-4" />
+                            </a>
+                            <a href={shareLinks.twitter} target="_blank" rel="noopener noreferrer" className="p-2 text-slate-400 hover:text-sky-400 hover:bg-sky-400/10 rounded-lg transition-all" title="Share on Twitter (X)">
+                                <Twitter className="w-4 h-4" />
+                            </a>
+                            <a href={shareLinks.whatsapp} target="_blank" rel="noopener noreferrer" className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-emerald-400/10 rounded-lg transition-all" title="Share on WhatsApp">
+                                <MessageCircle className="w-4 h-4" />
+                            </a>
+                        </div>
+
+                        {!isHistory && onRegenerate && (
+                            <button
+                                onClick={() => onRegenerate()}
+                                className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-lg text-sm font-bold hover:bg-purple-500 hover:text-white hover:border-purple-500 transition-all shadow-[0_0_10px_rgba(168,85,247,0.1)] hover:shadow-[0_0_20px_rgba(168,85,247,0.4)]"
+                            >
+                                <RefreshCw className="w-4 h-4" /> Try Again
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default PostCard;
