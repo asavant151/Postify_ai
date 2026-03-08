@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { Menu, X, Sparkles, LayoutDashboard, History as HistoryIcon, ShieldAlert, LogOut } from "lucide-react";
+import { Menu, X, Sparkles, LayoutDashboard, History as HistoryIcon, ShieldAlert, LogOut, Coins, CreditCard, User } from "lucide-react";
 
 const Navbar = () => {
     const { user, logout } = useContext(AuthContext);
@@ -19,9 +19,12 @@ const Navbar = () => {
         ? [
             { name: "Workspace", path: "/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
             { name: "History", path: "/history", icon: <HistoryIcon className="w-4 h-4" /> },
+            { name: "Pricing", path: "/pricing", icon: <CreditCard className="w-4 h-4" /> },
             ...(user.isAdmin ? [{ name: "Admin", path: "/admin", icon: <ShieldAlert className="w-4 h-4" /> }] : []),
         ]
-        : [];
+        : [
+            { name: "Pricing", path: "/pricing", icon: <CreditCard className="w-4 h-4" /> },
+        ];
 
     return (
         <nav className="bg-slate-950/80 backdrop-blur-xl sticky top-0 z-50 border-b border-slate-800">
@@ -40,6 +43,13 @@ const Navbar = () => {
 
                     {/* Desktop Menu */}
                     <div className="hidden md:flex items-center space-x-2">
+                        {user && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/10 border border-purple-500/20 rounded-full mr-2">
+                                <Coins className="w-4 h-4 text-purple-400" />
+                                <span className="text-sm font-bold text-purple-300">{user.credits} Credits</span>
+                                <Link to="/pricing" className="ml-1 text-[10px] bg-purple-500 text-white px-2 py-0.5 rounded-full hover:bg-purple-400 transition-colors">TOPUP</Link>
+                            </div>
+                        )}
                         {user ? (
                             <div className="flex items-center space-x-1 bg-slate-900 border border-slate-800 p-1.5 rounded-full">
                                 {navLinks.map((link) => (
@@ -47,14 +57,24 @@ const Navbar = () => {
                                         key={link.path}
                                         to={link.path}
                                         className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all ${location.pathname === link.path
-                                                ? "bg-slate-800 text-white shadow-sm border border-slate-700"
-                                                : "text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent"
+                                            ? "bg-slate-800 text-white shadow-sm border border-slate-700"
+                                            : "text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent"
                                             }`}
                                     >
                                         {link.icon}
                                         {link.name}
                                     </Link>
                                 ))}
+                                <Link
+                                    to="/profile"
+                                    className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all ${location.pathname === "/profile"
+                                        ? "bg-slate-800 text-white shadow-sm border border-slate-700"
+                                        : "text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent"
+                                        }`}
+                                >
+                                    <User className="w-4 h-4" />
+                                    Profile
+                                </Link>
                                 <button
                                     onClick={handleLogout}
                                     className="flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold text-red-400 hover:text-red-300 hover:bg-red-950/30 transition-all ml-1 border border-transparent hover:border-red-900/50"
@@ -102,8 +122,8 @@ const Navbar = () => {
                                         to={link.path}
                                         onClick={() => setIsOpen(false)}
                                         className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-base font-medium border ${location.pathname === link.path
-                                                ? "bg-slate-900 border-slate-700 text-white"
-                                                : "border-transparent text-slate-400 hover:bg-slate-900 hover:border-slate-800 hover:text-white"
+                                            ? "bg-slate-900 border-slate-700 text-white"
+                                            : "border-transparent text-slate-400 hover:bg-slate-900 hover:border-slate-800 hover:text-white"
                                             }`}
                                     >
                                         {link.icon}

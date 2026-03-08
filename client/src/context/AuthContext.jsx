@@ -11,9 +11,24 @@ export const AuthProvider = ({ children }) => {
         const userInfo = localStorage.getItem("userInfo");
         if (userInfo) {
             setUser(JSON.parse(userInfo));
+            refreshUser();
         }
         setLoading(false);
     }, []);
+
+    const refreshUser = async () => {
+        try {
+            const { data } = await API.get("/posts/profile");
+            const updatedUser = { ...JSON.parse(localStorage.getItem("userInfo")), ...data.user };
+            setUser(updatedUser);
+            localStorage.setItem("userInfo", JSON.stringify(updatedUser));
+        } catch (error) {
+            console.error("Failed to refresh user profile", error);
+            if (error.response?.status === 401) {
+                logout();
+            }
+        }
+    };
 
     const login = async (email, password) => {
         const { data } = await API.post("/auth/login", { email, password });
@@ -33,7 +48,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, loading, refreshUser }}>
             {!loading && children}
         </AuthContext.Provider>
     );

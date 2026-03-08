@@ -23,6 +23,10 @@ const postSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        image: {
+            type: String, // Store base64 or URL
+            required: false,
+        },
     },
     { timestamps: true }
 );

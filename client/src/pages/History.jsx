@@ -3,20 +3,24 @@ import API from "../services/api";
 import PostCard from "../components/PostCard";
 import Loader from "../components/Loader";
 import { toast } from "react-hot-toast";
-import { Clock, Archive } from "lucide-react";
+import { Clock, Archive, ChevronLeft, ChevronRight } from "lucide-react";
 
 const History = () => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     useEffect(() => {
-        fetchPosts();
-    }, []);
+        fetchPosts(page);
+    }, [page]);
 
-    const fetchPosts = async () => {
+    const fetchPosts = async (currentPage) => {
+        setLoading(true);
         try {
-            const { data } = await API.get("/posts");
+            const { data } = await API.get(`/posts?page=${currentPage}&limit=10`);
             setPosts(data.posts);
+            setTotalPages(data.totalPages);
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to fetch history");
         } finally {
@@ -48,7 +52,7 @@ const History = () => {
             {/* Background blur */}
             <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-slate-800/20 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 -translate-x-1/2"></div>
 
-            <div className="max-w-4xl mx-auto relative z-10">
+            <div className="max-w-6xl mx-auto relative z-10">
                 <div className="flex items-center gap-3 mb-10 pb-6 border-b border-slate-800/80">
                     <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl shadow-lg">
                         <Clock className="w-6 h-6 text-purple-400" />
@@ -70,16 +74,54 @@ const History = () => {
                         <p className="text-slate-400 font-medium max-w-sm mx-auto">Start generating posts in your workspace to build up your content archive.</p>
                     </div>
                 ) : (
-                    <div className="grid gap-10">
-                        {posts.map((post) => (
-                            <PostCard
-                                key={post._id}
-                                post={post}
-                                isHistory={true}
-                                onDelete={handleDelete}
-                            />
-                        ))}
-                    </div>
+                    <>
+                        <div className="grid gap-10">
+                            {posts.map((post) => (
+                                <PostCard
+                                    key={post._id}
+                                    post={post}
+                                    isHistory={true}
+                                    onDelete={handleDelete}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div className="mt-16 flex justify-center items-center gap-4">
+                                <button
+                                    onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={page === 1}
+                                    className="p-3 bg-slate-900 border border-slate-800 rounded-xl text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                >
+                                    <ChevronLeft className="w-6 h-6" />
+                                </button>
+
+                                <div className="flex gap-2">
+                                    {[...Array(totalPages)].map((_, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => setPage(i + 1)}
+                                            className={`w-12 h-12 rounded-xl font-bold transition-all border ${page === i + 1
+                                                ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/20"
+                                                : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white"
+                                                }`}
+                                        >
+                                            {i + 1}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <button
+                                    onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+                                    disabled={page === totalPages}
+                                    className="p-3 bg-slate-900 border border-slate-800 rounded-xl text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                >
+                                    <ChevronRight className="w-6 h-6" />
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

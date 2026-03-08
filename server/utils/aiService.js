@@ -1,6 +1,6 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const generatePost = async (idea, platform, tone) => {
+const generatePost = async (idea, platform, tone, imageBase64 = null) => {
     try {
         let templateRules = "";
 
@@ -50,7 +50,7 @@ Include:
 - Relevant hashtags`;
         }
 
-        const prompt = `You are an expert social media copywriter. Expand this idea into a highly engaging ${platform} post in a ${tone} tone. 
+        const prompt = `You are an expert social media copywriter. Expand this idea ${imageBase64 ? "and the provided image" : ""} into a highly engaging ${platform} post in a ${tone} tone. 
         
 ${templateRules}
 
@@ -62,7 +62,18 @@ Idea to expand: "${idea}"`;
         // Use the Gemini 2.5 Flash model
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        const result = await model.generateContent(prompt);
+        const parts = [prompt];
+
+        if (imageBase64) {
+            const match = imageBase64.match(/^data:(image\/\w+);base64,(.*)$/);
+            if (match) {
+                const mimeType = match[1];
+                const data = match[2];
+                parts.push({ inlineData: { data, mimeType } });
+            }
+        }
+
+        const result = await model.generateContent(parts);
         const response = await result.response;
         const text = response.text();
 

@@ -31,6 +31,8 @@ const registerUser = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 isAdmin: user.isAdmin,
+                credits: user.credits,
+                subscriptionTier: user.subscriptionTier,
                 token: generateToken(user._id),
             });
         } else {
@@ -54,6 +56,8 @@ const loginUser = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 isAdmin: user.isAdmin,
+                credits: user.credits,
+                subscriptionTier: user.subscriptionTier,
                 token: generateToken(user._id),
             });
         } else {

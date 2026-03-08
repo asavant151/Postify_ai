@@ -1,12 +1,16 @@
-import { useState, useRef, useEffect } from "react";
-import { Copy, Download, RefreshCw, Trash2, Linkedin, Twitter, MessageCircle, Check, Share2, AlignLeft, Languages } from "lucide-react";
+import { useState, useRef, useEffect, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+import { Copy, Download, RefreshCw, Trash2, Linkedin, Twitter, MessageCircle, Check, Share2, AlignLeft, Languages, ImagePlus } from "lucide-react";
 import { toast } from "react-hot-toast";
 import API from "../services/api";
 
 const PostCard = ({ post, onDelete, onRegenerate, isHistory = false }) => {
+    const { refreshUser } = useContext(AuthContext);
     const [content, setContent] = useState(post?.generatedContent || "");
     const [copied, setCopied] = useState(false);
     const [isTranslating, setIsTranslating] = useState(false);
+    const [generatedImage, setGeneratedImage] = useState(null);
+    const [isGeneratingImage, setIsGeneratingImage] = useState(false);
     const textareaRef = useRef(null);
     // API will be imported properly below
 
@@ -57,6 +61,22 @@ const PostCard = ({ post, onDelete, onRegenerate, isHistory = false }) => {
         }
     };
 
+    const handleGenerateImage = async () => {
+        if (!content.trim()) return;
+        setIsGeneratingImage(true);
+        const toastId = toast.loading('Generating image from post...', { style: { background: '#1e293b', color: '#fff', border: '1px solid #334155' } });
+        try {
+            const { data } = await API.post("/posts/generate-image-prompt", { text: content });
+            setGeneratedImage(data.imageUrl);
+            refreshUser();
+            toast.success("Image generated!", { id: toastId, style: { background: '#1e293b', color: '#fff', border: '1px solid #334155' } });
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Image generation failed", { id: toastId, style: { background: '#1e293b', color: '#fff', border: '1px solid #334155' } });
+        } finally {
+            setIsGeneratingImage(false);
+        }
+    };
+
     return (
         <div className="glass-card rounded-[2rem] border border-slate-700 hover:border-slate-500/80 transition-all duration-300 flex flex-col mt-6 shadow-2xl overflow-hidden group relative p-[1px] bg-gradient-to-b from-slate-700/50 to-slate-800/20">
 
@@ -93,6 +113,12 @@ const PostCard = ({ post, onDelete, onRegenerate, isHistory = false }) => {
                     <div className="pl-4">
                         <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Your Prompt</span>
                         <p className="text-sm text-slate-300 font-medium italic leading-relaxed">"{post?.idea}"</p>
+                        {post?.image && (
+                            <div className="mt-3">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Uploaded Image</span>
+                                <img src={post.image} alt="Uploaded" className="h-24 w-auto rounded-lg border border-slate-700 shadow-md object-cover" />
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -109,6 +135,15 @@ const PostCard = ({ post, onDelete, onRegenerate, isHistory = false }) => {
                         spellCheck="false"
                     />
                 </div>
+
+                {generatedImage && (
+                    <div className="mb-6 relative rounded-2xl overflow-hidden border border-slate-700 shadow-xl mx-auto w-full max-w-[400px]">
+                        <img src={generatedImage} alt="AI Generated for Post" className="w-full h-auto object-cover" crossOrigin="anonymous" />
+                        <a href={generatedImage} target="_blank" rel="noopener noreferrer" className="absolute top-3 right-3 p-2 bg-slate-900/80 hover:bg-purple-600 text-white rounded-lg backdrop-blur-sm transition-all shadow-lg" title="Open Full Size">
+                            <Download className="w-4 h-4" />
+                        </a>
+                    </div>
+                )}
 
                 {/* Action Footer */}
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-6 border-t border-slate-800/80">
@@ -129,6 +164,13 @@ const PostCard = ({ post, onDelete, onRegenerate, isHistory = false }) => {
                             className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-800 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 hover:bg-slate-700 rounded-xl text-sm font-bold transition-all"
                         >
                             <Download className="w-4 h-4" /> Save .txt
+                        </button>
+                        <button
+                            onClick={handleGenerateImage}
+                            disabled={isGeneratingImage}
+                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-purple-500/20 text-purple-400 hover:text-white border border-purple-500/30 hover:border-purple-500 hover:bg-purple-600 rounded-xl text-sm font-bold transition-all"
+                        >
+                            <ImagePlus className="w-4 h-4" /> AI Image
                         </button>
                     </div>
 

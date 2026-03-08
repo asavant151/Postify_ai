@@ -13,6 +13,8 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import History from "./pages/History";
 import Admin from "./pages/Admin";
+import Pricing from "./pages/Pricing";
+import Profile from "./pages/Profile";
 
 const App = () => {
   return (
@@ -25,6 +27,7 @@ const App = () => {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/pricing" element={<Pricing />} />
 
               <Route
                 path="/dashboard"
@@ -47,6 +50,14 @@ const App = () => {
                 element={
                   <ProtectedRoute adminOnly={true}>
                     <Admin />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
                   </ProtectedRoute>
                 }
               />

@@ -10,7 +10,7 @@ const Home = () => {
             <div className="absolute top-[20%] right-[-10%] w-[400px] h-[400px] bg-blue-600/30 rounded-full mix-blend-screen filter blur-[100px] opacity-50 animate-blob animation-delay-2000"></div>
             <div className="absolute bottom-[-20%] left-[20%] w-[600px] h-[600px] bg-indigo-600/20 rounded-full mix-blend-screen filter blur-[120px] opacity-50 animate-blob animation-delay-4000"></div>
 
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32 w-full text-center">
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-4 lg:pt-32 lg:pb-4 w-full text-center">
 
                 {/* Badge */}
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/50 border border-purple-500/30 backdrop-blur-md mb-8 text-sm font-semibold text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
@@ -52,18 +52,18 @@ const Home = () => {
                     {[
                         {
                             icon: <Globe className="w-6 h-6 text-blue-400" />,
-                            title: "Social Ready",
-                            desc: "Tailored structures for LinkedIn professionals, Twitter threads, or Instagram captions."
+                            title: "Multimodal AI",
+                            desc: "Upload images for instant analysis or generate brand new AI images for your posts."
                         },
                         {
                             icon: <Zap className="w-6 h-6 text-purple-400" />,
-                            title: "Instant Generation",
-                            desc: "Powered by advanced Open Source AI. Never stare at a blank screen again."
+                            title: "Credit System",
+                            desc: "Start with 10 free credits. Flexible pricing for professionals and businesses."
                         },
                         {
                             icon: <Layers className="w-6 h-6 text-indigo-400" />,
-                            title: "Adaptive Tones",
-                            desc: "From strict corporate boardroom to casual storytelling, match your brand voice perfectly."
+                            title: "Platform Optimized",
+                            desc: "Specific algorithms for LinkedIn hook, Twitter thread, and Instagram caption viral trends."
                         }
                     ].map((feature, i) => (
                         <div key={i} className="p-8 rounded-3xl bg-slate-900/50 border border-slate-800 backdrop-blur-md hover:bg-slate-800/80 transition-all hover:-translate-y-1 hover:border-slate-700 hover:shadow-2xl">
@@ -77,7 +77,7 @@ const Home = () => {
                 </div>
 
                 {/* Trust Badges */}
-                <div className="mt-20 pt-10 border-t border-slate-800/50 flex flex-col items-center justify-center">
+                <div className="mt-20 pt-5 border-t border-slate-800/50 flex flex-col items-center justify-center">
                     <div className="flex items-center gap-2 text-slate-500 font-medium text-sm">
                         <ShieldCheck className="w-4 h-4 text-green-500" />
                         No credit card required to test the magic.

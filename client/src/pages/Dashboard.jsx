@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 import PostForm from "../components/PostForm";
 import PostCard from "../components/PostCard";
 import API from "../services/api";
@@ -6,18 +7,20 @@ import { toast } from "react-hot-toast";
 import { Bot, Sparkles } from "lucide-react";
 
 const Dashboard = () => {
+    const { refreshUser } = useContext(AuthContext);
     const [loading, setLoading] = useState(false);
     const [currentPost, setCurrentPost] = useState(null);
     const [lastParams, setLastParams] = useState(null);
 
-    const handleGenerate = async (idea, platform, tone) => {
+    const handleGenerate = async (idea, platform, tone, image = null) => {
         setLoading(true);
-        setLastParams({ idea, platform, tone });
+        setLastParams({ idea, platform, tone, image });
         setCurrentPost(null); // Clear previous output while thinking
 
         try {
-            const { data } = await API.post("/posts", { idea, platform, tone });
+            const { data } = await API.post("/posts", { idea, platform, tone, image });
             setCurrentPost(data.post);
+            refreshUser();
             toast.success("Generation complete!", { icon: "🔥", style: { border: '1px solid #4a5568', background: '#1e293b', color: '#fff' } });
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to generate post");
@@ -28,7 +31,7 @@ const Dashboard = () => {
 
     const handleRegenerate = () => {
         if (lastParams) {
-            handleGenerate(lastParams.idea, lastParams.platform, lastParams.tone);
+            handleGenerate(lastParams.idea, lastParams.platform, lastParams.tone, lastParams.image);
         }
     };
 
@@ -39,7 +42,7 @@ const Dashboard = () => {
             <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-purple-600/10 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
             <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none translate-y-1/2 -translate-x-1/3"></div>
 
-            <div className="max-w-4xl mx-auto relative z-10">
+            <div className="max-w-6xl mx-auto relative z-10">
 
                 {/* Header section */}
                 <div className="text-center mb-12">

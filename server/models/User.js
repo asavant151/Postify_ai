@@ -19,6 +19,15 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        credits: {
+            type: Number,
+            default: 10, // Starting free credits
+        },
+        subscriptionTier: {
+            type: String,
+            enum: ['free', 'pro', 'business'],
+            default: 'free'
+        }
     },
     { timestamps: true }
 );
