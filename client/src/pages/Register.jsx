@@ -2,12 +2,13 @@ import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import { User, Mail, Lock, UserPlus, Sparkles } from "lucide-react";
+import { User, Mail, Lock, UserPlus, Sparkles, Eye, EyeOff } from "lucide-react";
 
 const Register = () => {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const { register } = useContext(AuthContext);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -88,13 +89,20 @@ const Register = () => {
                                 <Lock className="h-5 w-5 text-slate-500" />
                             </div>
                             <input
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="input-field-2 pl-11"
                                 placeholder="••••••••"
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-slate-400"
+                            >
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            </button>
                         </div>
                         <p className="text-xs text-slate-500 ml-1 mt-1">Must be at least 6 characters long.</p>
                     </div>
