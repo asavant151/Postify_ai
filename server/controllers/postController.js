@@ -2,6 +2,7 @@ const Post = require("../models/Post");
 const User = require("../models/User");
 const { generatePost, translatePost } = require("../utils/aiService");
 const { uploadImage } = require("../utils/cloudinary");
+const axios = require("axios");
 
 const createPost = async (req, res) => {
     const { idea, platform, tone, image } = req.body;
