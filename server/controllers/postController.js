@@ -1,6 +1,7 @@
 const Post = require("../models/Post");
 const User = require("../models/User");
 const { generatePost, translatePost } = require("../utils/aiService");
+const { uploadImage } = require("../utils/cloudinary");
 
 const createPost = async (req, res) => {
     const { idea, platform, tone, image } = req.body;
@@ -17,6 +18,12 @@ const createPost = async (req, res) => {
 
         const generatedContent = await generatePost(idea, platform, tone, image);
 
+        // Upload to Cloudinary if image exists
+        let imageUrl = image;
+        if (image && image.startsWith("data:image")) {
+            imageUrl = await uploadImage(image);
+        }
+
         user.credits -= 1;
         await user.save();
 
@@ -26,7 +33,7 @@ const createPost = async (req, res) => {
             platform,
             tone,
             generatedContent,
-            image,
+            image: imageUrl,
         });
 
         res.status(201).json({ success: true, post });
@@ -103,14 +110,36 @@ const generateImagePrompt = async (req, res) => {
         }
 
         const { GoogleGenerativeAI } = require("@google/generative-ai");
-        const promptText = `Based on the following social media post, create a short, visually descriptive prompt (less than 40 words) for an AI image generator like Midjourney or Stable Diffusion. Only output the prompt text, no other words. \n\nPost: ${text}`;
+        const promptText = `Create a visually stunning, high-detail prompt (max 20 words) for Stable Diffusion AI about this post: ${text}. Only output the prompt.`;
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const result = await model.generateContent(promptText);
         const imagePrompt = (await result.response.text()).trim();
 
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=1024&height=1024&nologo=true`;
+        // New Hugging Face Generation (Professional & Reliable)
+        // If user hasn't provided HF token, we fallback to Pollinations as a temporary measure
+        let imageUrl;
+        if (process.env.HUGGINGFACE_API_KEY) {
+            console.log("Generating image with Hugging Face...");
+            const hfResponse = await axios.post(
+                "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
+                { inputs: imagePrompt },
+                {
+                    headers: { Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}` },
+                    responseType: 'arraybuffer'
+                }
+            );
+
+            // Upload the generated binary data directly to Cloudinary
+            imageUrl = await uploadImage(Buffer.from(hfResponse.data, 'binary'));
+        } else {
+            // Reliable Pollinations URL (Direct)
+            const seed = Math.floor(Math.random() * 1000000);
+            const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=512&height=512&nologo=true&seed=${seed}`;
+            console.log("Using Pollinations (No HF Key):", pollinationsUrl);
+            imageUrl = await uploadImage(pollinationsUrl);
+        }
 
         user.credits -= 1;
         await user.save();
